@@ -1,0 +1,15 @@
+[project]
+name = "ttombo"
+version = "0.1.0"
+description = "Transcreve documentos manuscritos portugueses e extrai relacoes familiares simples."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pillow",
+    "openai",
+    "pytesseract",
+    "streamlit",
+]
+
+[tool.uv]
+package = false

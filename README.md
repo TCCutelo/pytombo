@@ -40,34 +40,21 @@ TTombo/
 │   └── Relation_extractor.py
 ├── artifacts/
 ├── transcricao_exemplo.txt
+├── pyproject.toml
 └── README.md
 ```
 
 ## Instalar dependencias
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
-
-Se fores usar apenas ficheiros de texto ja transcritos, nao precisas instalar nada extra.
-
-Se neste computador o comando `python` nao funcionar, podes usar `uv`:
+Este projeto usa [uv](https://docs.astral.sh/uv/) para gerir dependencias. As dependencias estao declaradas no `pyproject.toml` e ficam fixadas no `uv.lock`.
 
 ```powershell
-uv venv
-.\.venv\Scripts\Activate.ps1
-uv pip install -r requirements.txt
+uv sync
 ```
+
+O `uv sync` cria o ambiente virtual e instala tudo. Depois corre os comandos com `uv run`, sem precisares de ativar o ambiente manualmente.
 
 ## Usar com transcricao ja existente
-
-```powershell
-python main.py --texto transcricao_exemplo.txt --json
-```
-
-Neste computador tambem podes usar:
 
 ```powershell
 uv run python main.py --texto transcricao_exemplo.txt --json
@@ -86,7 +73,7 @@ A aplicacao permite carregar uma transcricao em `.txt`, escrever texto manualmen
 O Tesseract pode falhar bastante em escrita cursiva antiga, mas serve como baseline.
 
 ```powershell
-python main.py --imagem "c:\Users\Utilizador\Downloads\PT-ADVIS-AC-GCVIS-H-D-001-01016_m0003.jpg" --backend tesseract --json
+uv run python main.py --imagem "c:\Users\Utilizador\Downloads\PT-ADVIS-AC-GCVIS-H-D-001-01016_m0003.jpg" --backend tesseract --json
 ```
 
 ## Usar com backend OpenAI
@@ -96,11 +83,11 @@ Define uma chave de API e escolhe o modelo por variavel de ambiente. Isto e norm
 ```powershell
 $env:OPENAI_API_KEY="..."
 $env:TTOMBO_OPENAI_MODEL="gpt-4.1-mini"
-python main.py --imagem "c:\Users\Utilizador\Downloads\PT-ADVIS-AC-GCVIS-H-D-001-01016_m0003.jpg" --backend openai --json
+uv run python main.py --imagem "c:\Users\Utilizador\Downloads\PT-ADVIS-AC-GCVIS-H-D-001-01016_m0003.jpg" --backend openai --json
 ```
 
 ## Preparar uma imagem
 
 ```powershell
-python main.py --imagem "c:\Users\Utilizador\Downloads\PT-ADVIS-AC-GCVIS-H-D-001-01016_m0003.jpg" --preprocessar --output artifacts\m0003_prepared.png
+uv run python main.py --imagem "c:\Users\Utilizador\Downloads\PT-ADVIS-AC-GCVIS-H-D-001-01016_m0003.jpg" --preprocessar --output artifacts\m0003_prepared.png
 ```
