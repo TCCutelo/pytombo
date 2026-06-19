@@ -1,0 +1,1 @@
+"""Camada model do projeto."""
