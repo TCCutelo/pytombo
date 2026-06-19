@@ -1,0 +1,12 @@
+# Append this block to /etc/caddy/Caddyfile (do NOT overwrite the file —
+# the server hosts many sites). Then: caddy validate --config /etc/caddy/Caddyfile
+# && systemctl reload caddy
+
+tombo.filias.dev {
+    handle /deploy {
+        reverse_proxy localhost:9011
+    }
+    handle {
+        reverse_proxy localhost:8501
+    }
+}

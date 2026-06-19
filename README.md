@@ -91,3 +91,9 @@ uv run python main.py --imagem "c:\Users\Utilizador\Downloads\PT-ADVIS-AC-GCVIS-
 ```powershell
 uv run python main.py --imagem "c:\Users\Utilizador\Downloads\PT-ADVIS-AC-GCVIS-H-D-001-01016_m0003.jpg" --preprocessar --output artifacts\m0003_prepared.png
 ```
+
+## Deploy
+
+A aplicacao esta publicada em https://tombo.filias.dev e faz deploy automatico
+quando se faz push para `main` (webhook do GitHub no servidor). Os detalhes de
+infraestrutura (servico systemd, webhook, Caddy) estao em [`deploy/NOTES.md`](deploy/NOTES.md).

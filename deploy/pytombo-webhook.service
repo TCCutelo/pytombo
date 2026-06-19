@@ -1,0 +1,15 @@
+[Unit]
+Description=TTombo deploy webhook
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/opt/pytombo
+Environment=WEBHOOK_SECRET=CHANGE_ME
+Environment=WEBHOOK_PORT=9011
+ExecStart=/opt/pytombo/.venv/bin/python deploy/webhook.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
