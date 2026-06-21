@@ -92,6 +92,25 @@ uv run python main.py --imagem "c:\Users\Utilizador\Downloads\PT-ADVIS-AC-GCVIS-
 uv run python main.py --imagem "c:\Users\Utilizador\Downloads\PT-ADVIS-AC-GCVIS-H-D-001-01016_m0003.jpg" --preprocessar --output artifacts\m0003_prepared.png
 ```
 
+## Site e administracao (Django)
+
+Em `web/` existe um projeto Django que serve o site publico e a area de
+administracao onde os especialistas inserem as transcricoes dos manuscritos
+(cada transcricao aprovada serve tambem de dado de treino — ver
+[`docs/plan.md`](docs/plan.md)).
+
+```powershell
+# migracoes e utilizador de administracao (primeira vez)
+uv run python web/manage.py migrate
+uv run python web/manage.py createsuperuser
+
+# correr o servidor de desenvolvimento
+uv run python web/manage.py runserver
+```
+
+- Site publico: http://127.0.0.1:8000/
+- Administracao (especialistas): http://127.0.0.1:8000/admin/
+
 ## Deploy
 
 A aplicacao esta publicada em https://tombo.filias.dev e faz deploy automatico

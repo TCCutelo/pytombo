@@ -9,6 +9,9 @@ dependencies = [
     "openai",
     "pytesseract",
     "streamlit",
+    "django",
+    "gunicorn",
+    "whitenoise",
 ]
 
 [tool.uv]

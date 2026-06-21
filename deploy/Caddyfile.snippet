@@ -1,12 +1,26 @@
 # Append this block to /etc/caddy/Caddyfile (do NOT overwrite the file —
 # the server hosts many sites). Then: caddy validate --config /etc/caddy/Caddyfile
 # && systemctl reload caddy
+#
+# Routing on tombo.filias.dev:
+#   /          -> Django site + admin (gunicorn :8502); WhiteNoise serves /static/
+#   /st/*      -> Streamlit app (:8501, started with --server.baseUrlPath st)
+#   /media/*   -> uploaded manuscript images (served from disk)
+#   /deploy    -> GitHub deploy webhook (:9011)
 
 tombo.filias.dev {
+    redir /st /st/
+    handle /st/* {
+        reverse_proxy localhost:8501
+    }
     handle /deploy {
         reverse_proxy localhost:9011
     }
+    handle_path /media/* {
+        root * /opt/pytombo/web/media
+        file_server
+    }
     handle {
-        reverse_proxy localhost:8501
+        reverse_proxy localhost:8502
     }
 }

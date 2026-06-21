@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}TTombo{% endblock %}</title>
+    <style>
+        :root { --ink: #2b2118; --paper: #f6f1e7; --accent: #7a5c3e; }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; font-family: Georgia, "Times New Roman", serif;
+            color: var(--ink); background: var(--paper); line-height: 1.6;
+        }
+        header, main, footer { max-width: 760px; margin: 0 auto; padding: 0 1.25rem; }
+        header { padding-top: 2.5rem; }
+        h1 { font-size: 2.4rem; margin: 0 0 .25rem; }
+        .tagline { color: var(--accent); font-style: italic; margin-top: 0; }
+        .stats { display: flex; gap: 2rem; margin: 2rem 0; }
+        .stat { background: #fff; border: 1px solid #e0d6c4; border-radius: 8px;
+                padding: 1rem 1.5rem; }
+        .stat .num { font-size: 2rem; font-weight: bold; display: block; }
+        .stat .label { color: var(--accent); font-size: .9rem; }
+        a.button { display: inline-block; background: var(--accent); color: #fff;
+                   text-decoration: none; padding: .6rem 1.2rem; border-radius: 6px; }
+        a.button:hover { background: #5e4631; }
+        footer { color: #8a7a64; font-size: .85rem; margin: 3rem 0 2rem;
+                 border-top: 1px solid #e0d6c4; padding-top: 1rem; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>TTombo</h1>
+        <p class="tagline">Transcrição de documentos manuscritos portugueses e extração de relações familiares.</p>
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    <footer>
+        {% block footer %}TTombo — projeto de transcrição e genealogia.{% endblock %}
+    </footer>
+</body>
+</html>

@@ -16,39 +16,71 @@ ssh -i ~/.ssh/memi root@46.224.236.207
 ## Architecture
 
 ```
-Internet → Caddy (:443, auto HTTPS) → Streamlit (:8501) → app.py
-                                     → webhook (:9011) on /deploy
+Internet → Caddy (:443, auto HTTPS)
+             /         → Django site + admin (gunicorn :8502, WhiteNoise static)
+             /st/*     → Streamlit app (:8501, --server.baseUrlPath st)
+             /media/*  → uploaded manuscript images (file_server)
+             /deploy   → deploy webhook (:9011)
 ```
 
-Ports on this shared server: app = 8501, webhook = 9011.
+URLs:
+- https://tombo.filias.dev/        — site publico (Django landing)
+- https://tombo.filias.dev/admin/  — area dos especialistas (Django admin)
+- https://tombo.filias.dev/st/     — ferramenta Streamlit
+
+Ports on this shared server: streamlit = 8501, django = 8502, webhook = 9011.
 
 ## Deploy updates
 
-Auto-deploys on push to main via GitHub webhook (https://tombo.filias.dev/deploy).
+Auto-deploys on push to main via GitHub webhook (https://tombo.filias.dev/deploy):
+git pull → uv sync → manage.py migrate → manage.py collectstatic → restart
+pytombo + pytombo-web.
 
 Manual deploy if needed:
 
 ```
 ssh -i ~/.ssh/memi root@46.224.236.207
-cd /opt/pytombo && sudo -u pytombo -H git pull && sudo -u pytombo -H uv sync && systemctl restart pytombo
+cd /opt/pytombo
+sudo -u pytombo -H git pull
+sudo -u pytombo -H uv sync
+sudo -u pytombo -H env DJANGO_DEBUG=False DJANGO_SECRET_KEY=build uv run python web/manage.py migrate --noinput
+sudo -u pytombo -H env DJANGO_DEBUG=False DJANGO_SECRET_KEY=build uv run python web/manage.py collectstatic --noinput
+systemctl restart pytombo pytombo-web
+```
+
+## Database
+
+SQLite at `/opt/pytombo/web/db.sqlite3` (owned by `pytombo`). The ML pipeline
+trains on *exported* image+text pairs, not the live DB, so SQLite is fine here.
+To move to Postgres later: install `dj-database-url` + `psycopg[binary]`, add a
+`DATABASE_URL` env line to `pytombo-web.service`, then migrate the data.
+
+## Create / manage expert accounts
+
+```bash
+cd /opt/pytombo
+sudo -u pytombo -H env DJANGO_SECRET_KEY=build uv run python web/manage.py createsuperuser
 ```
 
 ## Useful commands (on the server)
 
 ```bash
-systemctl status pytombo            # app status
-journalctl -u pytombo -f            # follow app logs
-systemctl restart pytombo           # restart app
-systemctl status pytombo-webhook    # webhook status
-journalctl -u pytombo-webhook -f    # follow webhook logs
+systemctl status pytombo pytombo-web   # streamlit + django status
+journalctl -u pytombo-web -f           # follow django logs
+journalctl -u pytombo -f               # follow streamlit logs
+journalctl -u pytombo-webhook -f       # follow webhook logs
 ```
 
 ## Config files on server
 
 - /opt/pytombo/ — app code (cloned, owned by user `pytombo`)
-- /etc/caddy/Caddyfile — reverse proxy (shared; tombo.filias.dev block appended)
-- /etc/systemd/system/pytombo.service — app service
-- /etc/systemd/system/pytombo-webhook.service — webhook service (holds WEBHOOK_SECRET)
+- /opt/pytombo/web/db.sqlite3 — Django database
+- /opt/pytombo/web/media/ — uploaded manuscript images
+- /opt/pytombo/web/staticfiles/ — collected static (served by WhiteNoise)
+- /etc/caddy/Caddyfile — reverse proxy (shared; tombo.filias.dev block)
+- /etc/systemd/system/pytombo.service — Streamlit app (baseUrlPath=st)
+- /etc/systemd/system/pytombo-web.service — Django (holds DJANGO_SECRET_KEY)
+- /etc/systemd/system/pytombo-webhook.service — webhook (holds WEBHOOK_SECRET)
 
 ## Optional: OCR backends
 

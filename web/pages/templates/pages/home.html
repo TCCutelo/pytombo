@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}TTombo — transcrição de manuscritos{% endblock %}
+
+{% block content %}
+<p>
+    O TTombo ajuda a transcrever documentos manuscritos antigos e a extrair
+    relações familiares simples (filho, pai, mãe) para análise genealógica.
+    Especialistas registam as transcrições, que servem também para treinar um
+    modelo de leitura automática.
+</p>
+
+<div class="stats">
+    <div class="stat">
+        <span class="num">{{ manuscript_count }}</span>
+        <span class="label">manuscritos</span>
+    </div>
+    <div class="stat">
+        <span class="num">{{ approved_count }}</span>
+        <span class="label">transcrições aprovadas</span>
+    </div>
+</div>
+
+<p>
+    {% if user.is_authenticated %}
+        <a class="button" href="{% url 'admin:index' %}">Área de transcrição</a>
+    {% else %}
+        <a class="button" href="{% url 'admin:index' %}">Entrar (especialistas)</a>
+    {% endif %}
+    <a class="button" href="/st/" style="background:#5e7a3e;">Experimentar a ferramenta</a>
+</p>
+{% endblock %}

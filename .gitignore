@@ -7,3 +7,8 @@ __pycache__/
 
 # uploads geradas pela aplicacao
 artifacts/uploads/
+
+# Django (web/)
+web/db.sqlite3
+web/media/
+web/staticfiles/

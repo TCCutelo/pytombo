@@ -9,11 +9,20 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 
 SECRET = os.environ["WEBHOOK_SECRET"].encode()
 PORT = int(os.environ.get("WEBHOOK_PORT", "9011"))
+# manage.py runs with DEBUG=False so collectstatic builds the hashed manifest
+# that the gunicorn service (WhiteNoise) expects. SECRET_KEY here is a throwaway
+# only used by these build commands; the real one lives in pytombo-web.service.
+_MANAGE = (
+    "sudo -u pytombo -H env DJANGO_DEBUG=False DJANGO_SECRET_KEY=build "
+    "/usr/local/bin/uv run python web/manage.py"
+)
 DEPLOY_CMD = (
     "cd /opt/pytombo "
     "&& sudo -u pytombo -H git pull --ff-only "
     "&& sudo -u pytombo -H /usr/local/bin/uv sync "
-    "&& systemctl restart pytombo"
+    f"&& {_MANAGE} migrate --noinput "
+    f"&& {_MANAGE} collectstatic --noinput "
+    "&& systemctl restart pytombo pytombo-web"
 )
 
 
