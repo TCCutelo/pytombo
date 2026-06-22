@@ -4,7 +4,7 @@
 
 - Hetzner CX22, Ubuntu 24.04 (shared box, also hosts memi, filias.dev, etc.)
 - IP: 46.224.236.207
-- Domain: tombo.filias.dev
+- Domain: bisa.filias.dev (antigo tombo.filias.dev descontinuado)
 - SSH key: ~/.ssh/memi
 
 ## SSH in
@@ -23,7 +23,7 @@ Internet → Caddy (:443, auto HTTPS)
              /deploy   → deploy webhook (:9011)
 ```
 
-URLs (marca: Bisa; dominio antigo tombo.filias.dev redireciona para bisa):
+URLs (marca: Bisa):
 - https://bisa.filias.dev/        — site publico (Django landing)
 - https://bisa.filias.dev/admin/  — area dos especialistas (Django admin)
 - https://bisa.filias.dev/st/     — ferramenta Streamlit
@@ -32,7 +32,7 @@ Ports on this shared server: streamlit = 8501, django = 8502, webhook = 9011.
 
 ## Deploy updates
 
-Auto-deploys on push to main via GitHub webhook (https://tombo.filias.dev/deploy):
+Auto-deploys on push to main via GitHub webhook (https://bisa.filias.dev/deploy):
 git pull → uv sync → manage.py migrate → manage.py collectstatic → restart
 pytombo + pytombo-web.
 
