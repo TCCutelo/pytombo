@@ -23,6 +23,15 @@
         a.button { display: inline-block; background: var(--accent); color: #fff;
                    text-decoration: none; padding: .6rem 1.2rem; border-radius: 6px; }
         a.button:hover { background: #5e4631; }
+        .lead { font-size: 1.2rem; }
+        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+                 gap: 1rem; margin: 2rem 0; }
+        .card { background: #fff; border: 1px solid #e0d6c4; border-radius: 8px;
+                padding: 1.25rem; }
+        .card h3 { margin: 0 0 .4rem; }
+        .card p { margin: 0; color: #5a4a36; font-size: .95rem; }
+        .note { background: #efe7d6; border: 1px dashed #c9b894; border-radius: 8px;
+                padding: .9rem 1.1rem; color: #6b5a40; font-size: .95rem; }
         footer { color: #8a7a64; font-size: .85rem; margin: 3rem 0 2rem;
                  border-top: 1px solid #e0d6c4; padding-top: 1rem; }
     </style>
@@ -30,13 +39,14 @@
 <body>
     <header>
         <h1>Bisa</h1>
-        <p class="tagline">Transcrição de documentos manuscritos portugueses e extração de relações familiares.</p>
+        <p class="tagline">Ajudamos a descobrir e a investigar a sua história de família em Portugal.</p>
     </header>
     <main>
         {% block content %}{% endblock %}
     </main>
     <footer>
-        {% block footer %}Bisa — projeto de transcrição e genealogia.{% endblock %}
+        {% block footer %}Bisa — investigação de genealogia portuguesa.
+        <a href="{% url 'admin:index' %}">Área de especialistas</a>{% endblock %}
     </footer>
 </body>
 </html>
