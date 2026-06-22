@@ -1,6 +1,7 @@
 // Live preview for the manuscript URL field in the admin.
-// If the URL is a direct image it is shown inline; otherwise an "open" button
-// is shown so the expert can view it in a new tab while transcribing.
+// As soon as a URL is entered we ALWAYS show an "open in new tab" button (so
+// there is always a way to view the manuscript), and we additionally try to
+// load it inline as an image — shown on top if it is a direct image URL.
 (function () {
   function init() {
     var input = document.getElementById("id_source_url");
@@ -14,26 +15,33 @@
     function update() {
       var url = (input.value || "").trim();
       if (!url) {
-        img.style.display = "none";
-        link.style.display = "none";
         empty.style.display = "";
+        link.style.display = "none";
+        img.style.display = "none";
+        img.removeAttribute("src");
         return;
       }
       empty.style.display = "none";
+      // Always offer a way to open the manuscript.
       link.href = url;
+      link.style.display = "inline-block";
+      // Try to show it inline; only an actual image will appear.
+      img.style.display = "none";
       img.onload = function () {
-        img.style.display = "";
-        link.style.display = "none";
+        img.style.display = "block";
       };
       img.onerror = function () {
         img.style.display = "none";
-        link.style.display = "inline-block";
       };
       img.src = url;
     }
 
-    input.addEventListener("input", update);
-    input.addEventListener("change", update);
+    ["input", "change", "keyup", "paste", "blur"].forEach(function (ev) {
+      input.addEventListener(ev, function () {
+        // paste fills the value on the next tick
+        setTimeout(update, 0);
+      });
+    });
     update();
   }
 
