@@ -5,7 +5,7 @@ from django.utils.safestring import mark_safe
 
 from .models import Manuscript, Transcription
 
-BIG_TEXTAREA = forms.Textarea(attrs={"rows": 18, "style": "width: 95%;"})
+BIG_TEXTAREA = forms.Textarea(attrs={"rows": 24, "style": "width: 100%;"})
 
 PREVIEW_HTML = mark_safe(
     """
@@ -73,11 +73,13 @@ class ManuscriptAdmin(admin.ModelAdmin):
 
     class Media:
         js = ("manuscripts/preview.js",)
+        css = {"all": ("manuscripts/transcribe.css",)}
 
     fieldsets = (
         (
             "Transcrever",
             {
+                "classes": ("transcrever",),
                 "fields": (
                     "source_url",
                     "preview",

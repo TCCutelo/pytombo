@@ -1,0 +1,50 @@
+/* Side-by-side transcription workspace in the Manuscript admin form:
+   manuscript preview on the left, transcription text box on the right. */
+
+#ms-preview {
+  max-height: 78vh;
+  overflow: auto;
+  border: 1px solid #e0d6c4;
+  border-radius: 6px;
+  padding: 6px;
+  background: #faf7f0;
+}
+#ms-preview .ms-preview-img {
+  max-width: 100%;
+  height: auto;
+}
+.field-transcription_text textarea {
+  width: 100%;
+  height: 78vh;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+/* Two columns on wide screens; stacks on narrow ones. */
+@media (min-width: 1100px) {
+  fieldset.transcrever {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 1.5rem;
+    align-items: start;
+  }
+  fieldset.transcrever > h2,
+  fieldset.transcrever > .description,
+  fieldset.transcrever .form-row.field-source_url,
+  fieldset.transcrever .form-row.field-transcription_status {
+    grid-column: 1 / -1;
+  }
+  fieldset.transcrever .form-row.field-preview {
+    grid-column: 1;
+    position: sticky;
+    top: 1rem;
+  }
+  fieldset.transcrever .form-row.field-transcription_text {
+    grid-column: 2;
+  }
+  /* let the textarea use the full column width */
+  fieldset.transcrever .form-row.field-transcription_text .vLargeTextField,
+  fieldset.transcrever .form-row.field-transcription_text textarea {
+    width: 100%;
+  }
+}
