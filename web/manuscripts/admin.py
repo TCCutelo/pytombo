@@ -13,20 +13,39 @@ class TranscriptionInline(admin.StackedInline):
 
 @admin.register(Manuscript)
 class ManuscriptAdmin(admin.ModelAdmin):
-    list_display = ("reference", "title", "source", "thumbnail", "transcription_count")
-    search_fields = ("reference", "title", "source")
-    readonly_fields = ("preview", "created_at", "updated_at")
-    inlines = [TranscriptionInline]
-    fields = (
-        "reference",
+    list_display = (
+        "reference_code",
+        "image_no",
         "title",
-        "image",
-        "preview",
         "source",
-        "source_url",
-        "notes",
-        "created_at",
-        "updated_at",
+        "verified",
+        "thumbnail",
+        "transcription_count",
+    )
+    list_filter = ("verified", "metadata_source", "source")
+    search_fields = ("reference", "reference_code", "image_no", "title", "source")
+    readonly_fields = ("preview", "image_sha256", "created_at", "updated_at")
+    inlines = [TranscriptionInline]
+    fieldsets = (
+        (None, {"fields": ("title", "image", "preview", "verified")}),
+        (
+            "Referência / origem",
+            {
+                "fields": (
+                    "reference",
+                    "reference_code",
+                    "image_no",
+                    "source",
+                    "source_url",
+                    "image_sha256",
+                )
+            },
+        ),
+        (
+            "Metadados",
+            {"fields": ("metadata_source", "raw_metadata", "notes")},
+        ),
+        ("Datas", {"fields": ("created_at", "updated_at")}),
     )
 
     @admin.display(description="pré-visualização")
