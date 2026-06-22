@@ -23,16 +23,40 @@ PREVIEW_HTML = mark_safe(
 )
 
 
-class TranscriptionInline(admin.StackedInline):
-    model = Transcription
-    extra = 1
-    fields = ("text", "status", "notes")
-    formfield_overrides = {models.TextField: {"widget": BIG_TEXTAREA}}
+class ManuscriptForm(forms.ModelForm):
+    """Manuscript form with the transcription text built in, so an expert fills
+    one form: URL + text + Save."""
+
+    transcription_text = forms.CharField(
+        label="Transcrição",
+        required=False,
+        widget=BIG_TEXTAREA,
+        help_text="Escreva aqui o conteúdo do manuscrito.",
+    )
+    transcription_status = forms.ChoiceField(
+        label="Estado da transcrição",
+        required=False,
+        choices=Transcription.Status.choices,
+        initial=Transcription.Status.DRAFT,
+    )
+
+    class Meta:
+        model = Manuscript
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Prefill from the existing (latest) transcription when editing.
+        if self.instance.pk:
+            tr = self.instance.transcriptions.order_by("-updated_at").first()
+            if tr:
+                self.fields["transcription_text"].initial = tr.text
+                self.fields["transcription_status"].initial = tr.status
 
 
 @admin.register(Manuscript)
 class ManuscriptAdmin(admin.ModelAdmin):
-    inlines = [TranscriptionInline]
+    form = ManuscriptForm
     list_display = (
         "__str__",
         "source",
@@ -54,8 +78,13 @@ class ManuscriptAdmin(admin.ModelAdmin):
         (
             "Transcrever",
             {
-                "fields": ("source_url", "preview"),
-                "description": "Cole o URL do manuscrito e escreva a transcrição em baixo.",
+                "fields": (
+                    "source_url",
+                    "preview",
+                    "transcription_text",
+                    "transcription_status",
+                ),
+                "description": "Cole o URL do manuscrito, escreva a transcrição e grave.",
             },
         ),
         (
@@ -90,16 +119,23 @@ class ManuscriptAdmin(admin.ModelAdmin):
     def transcription_count(self, obj):
         return obj.transcriptions.count()
 
-    def save_formset(self, request, form, formset, change):
-        # Record the logged-in expert as the transcriber on new transcriptions.
-        instances = formset.save(commit=False)
-        for obj in instances:
-            if isinstance(obj, Transcription) and obj.transcriber_id is None:
-                obj.transcriber = request.user
-            obj.save()
-        formset.save_m2m()
-        for obj in formset.deleted_objects:
-            obj.delete()
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        text = (form.cleaned_data.get("transcription_text") or "").strip()
+        if not text:
+            return
+        status = (
+            form.cleaned_data.get("transcription_status")
+            or Transcription.Status.DRAFT
+        )
+        tr = obj.transcriptions.order_by("-updated_at").first()
+        if tr is None:
+            tr = Transcription(manuscript=obj, transcriber=request.user)
+        tr.text = text
+        tr.status = status
+        if tr.transcriber_id is None:
+            tr.transcriber = request.user
+        tr.save()
 
 
 @admin.register(Transcription)
