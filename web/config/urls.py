@@ -5,8 +5,8 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-admin.site.site_header = "TTombo — administração"
-admin.site.site_title = "TTombo"
+admin.site.site_header = "Bisa — administração"
+admin.site.site_title = "Bisa"
 admin.site.index_title = "Transcrição de manuscritos"
 
 urlpatterns = [

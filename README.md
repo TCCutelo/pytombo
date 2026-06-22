@@ -1,4 +1,7 @@
-# TTombo MVC
+# Bisa
+
+> Antes "TTombo". O nome do projeto/repositorio interno continua `pytombo`.
+
 
 Projeto Python simples, em formato Model View Controller, para ajudar a transcrever documentos manuscritos portugueses e extrair relacoes familiares simples, por exemplo:
 
@@ -113,6 +116,7 @@ uv run python web/manage.py runserver
 
 ## Deploy
 
-A aplicacao esta publicada em https://tombo.filias.dev e faz deploy automatico
+A aplicacao esta publicada em https://bisa.filias.dev (o antigo
+https://tombo.filias.dev redireciona para la) e faz deploy automatico
 quando se faz push para `main` (webhook do GitHub no servidor). Os detalhes de
 infraestrutura (servico systemd, webhook, Caddy) estao em [`deploy/NOTES.md`](deploy/NOTES.md).

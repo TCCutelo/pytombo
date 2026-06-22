@@ -23,10 +23,10 @@ Internet → Caddy (:443, auto HTTPS)
              /deploy   → deploy webhook (:9011)
 ```
 
-URLs:
-- https://tombo.filias.dev/        — site publico (Django landing)
-- https://tombo.filias.dev/admin/  — area dos especialistas (Django admin)
-- https://tombo.filias.dev/st/     — ferramenta Streamlit
+URLs (marca: Bisa; dominio antigo tombo.filias.dev redireciona para bisa):
+- https://bisa.filias.dev/        — site publico (Django landing)
+- https://bisa.filias.dev/admin/  — area dos especialistas (Django admin)
+- https://bisa.filias.dev/st/     — ferramenta Streamlit
 
 Ports on this shared server: streamlit = 8501, django = 8502, webhook = 9011.
 

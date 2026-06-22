@@ -1,14 +1,17 @@
-# Append this block to /etc/caddy/Caddyfile (do NOT overwrite the file —
-# the server hosts many sites). Then: caddy validate --config /etc/caddy/Caddyfile
-# && systemctl reload caddy
+# Caddy config for Bisa. The primary site is bisa.filias.dev; the old
+# tombo.filias.dev redirects to it (but keeps /deploy so the existing GitHub
+# webhook, which does not follow redirects, still works).
+# Append/replace these two blocks in /etc/caddy/Caddyfile (do NOT overwrite the
+# whole file — the server hosts many sites). Then:
+#   caddy validate --config /etc/caddy/Caddyfile && systemctl reload caddy
 #
-# Routing on tombo.filias.dev:
+# Routing on bisa.filias.dev:
 #   /          -> Django site + admin (gunicorn :8502); WhiteNoise serves /static/
 #   /st/*      -> Streamlit app (:8501, started with --server.baseUrlPath st)
 #   /media/*   -> uploaded manuscript images (served from disk)
 #   /deploy    -> GitHub deploy webhook (:9011)
 
-tombo.filias.dev {
+bisa.filias.dev {
     redir /st /st/
     handle /st/* {
         reverse_proxy localhost:8501
@@ -22,5 +25,15 @@ tombo.filias.dev {
     }
     handle {
         reverse_proxy localhost:8502
+    }
+}
+
+tombo.filias.dev {
+    # Keep the webhook endpoint live (GitHub does not follow redirects).
+    handle /deploy {
+        reverse_proxy localhost:9011
+    }
+    handle {
+        redir https://bisa.filias.dev{uri} permanent
     }
 }

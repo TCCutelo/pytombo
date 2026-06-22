@@ -10,8 +10,8 @@ UPLOAD_DIR = Path("artifacts") / "uploads"
 
 
 def main():
-    st.set_page_config(page_title="TTombo", layout="wide")
-    st.title("TTombo")
+    st.set_page_config(page_title="Bisa", layout="wide")
+    st.title("Bisa")
     st.caption("Transcreve documentos e extrai relacoes familiares a partir do texto corrigido.")
 
     controller = Controller()
