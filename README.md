@@ -114,9 +114,37 @@ uv run python web/manage.py runserver
 - Site publico: http://127.0.0.1:8000/
 - Administracao (especialistas): http://127.0.0.1:8000/admin/
 
+### Transcrever um manuscrito
+
+No admin (Manuscritos → Adicionar) o especialista preenche um so formulario:
+
+1. **URL do manuscrito** — pre-visualizacao ao lado (imagem inline, ou botao
+   "Abrir manuscrito" para paginas de visualizador).
+2. **Transcricao** — caixa de texto grande, lado a lado com o manuscrito.
+3. **Gravar** — guarda tudo; o especialista autenticado fica como `transcriber`.
+
+### Extracao automatica de metadados
+
+Os metadados nao se inserem a mao — sao extraidos ao gravar (so preenchem campos
+vazios, nunca sobrescrevem o que foi escrito ou `verified`):
+
+- **Do nome/URL** — `reference`, `reference_code`, `image_no` e o arquivo
+  (`source`), ex.: `PT-ADVIS-AC-GCVIS-H-D-001-01016_m0003.jpg` →
+  Arquivo Distrital de Viseu. Ver [`docs/metadata.md`](docs/metadata.md).
+- **Da propria imagem** — dimensoes, formato, modo, DPI, tamanho e EXIF (data de
+  digitalizacao, equipamento, software…) guardados em `raw_metadata` e mostrados
+  num painel legivel ("Metadados da imagem"). Funciona com ficheiro carregado ou
+  URL de imagem direta.
+
+Reprocessar registos existentes:
+
+```powershell
+uv run python web/manage.py backfill_manuscripts            # hashes + nome/URL
+uv run python web/manage.py backfill_manuscripts --fetch    # tambem descarrega imagens
+```
+
 ## Deploy
 
-A aplicacao esta publicada em https://bisa.filias.dev (o antigo
-https://tombo.filias.dev redireciona para la) e faz deploy automatico
+A aplicacao esta publicada em https://bisa.filias.dev e faz deploy automatico
 quando se faz push para `main` (webhook do GitHub no servidor). Os detalhes de
 infraestrutura (servico systemd, webhook, Caddy) estao em [`deploy/NOTES.md`](deploy/NOTES.md).
