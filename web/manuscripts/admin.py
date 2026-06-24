@@ -1,11 +1,65 @@
 from django import forms
 from django.contrib import admin
 from django.db import models
+from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 
 from .models import Manuscript, Transcription
 
 BIG_TEXTAREA = forms.Textarea(attrs={"rows": 24, "style": "width: 100%;"})
+
+# Friendly labels for the image-metadata panel.
+IMAGE_LABELS = {
+    "width": "Largura (px)",
+    "height": "Altura (px)",
+    "format": "Formato",
+    "mode": "Modo",
+    "dpi": "DPI",
+    "size_bytes": "Tamanho",
+}
+EXIF_LABELS = {
+    "DateTimeOriginal": "Data original",
+    "DateTimeDigitized": "Data de digitalização",
+    "DateTime": "Data",
+    "Make": "Equipamento (marca)",
+    "Model": "Equipamento (modelo)",
+    "Software": "Software",
+    "Artist": "Autor",
+    "Copyright": "Direitos",
+    "ImageDescription": "Descrição",
+    "XResolution": "Resolução X",
+    "YResolution": "Resolução Y",
+    "ResolutionUnit": "Unidade de resolução",
+}
+
+
+def _human_size(value):
+    try:
+        size = float(value)
+    except (TypeError, ValueError):
+        return value
+    for unit in ("B", "KB", "MB", "GB"):
+        if size < 1024 or unit == "GB":
+            return f"{size:.0f} {unit}" if unit == "B" else f"{size:.1f} {unit}"
+        size /= 1024
+
+
+def _image_rows(image):
+    rows = []
+    for key, label in IMAGE_LABELS.items():
+        if key not in image:
+            continue
+        value = image[key]
+        if key == "size_bytes":
+            value = _human_size(value)
+        elif key == "dpi" and isinstance(value, list):
+            value = " × ".join(str(v) for v in value)
+        rows.append((label, value))
+    exif = image.get("exif") or {}
+    for key, label in EXIF_LABELS.items():
+        if key in exif:
+            rows.append((label, exif[key]))
+    return rows
 
 PREVIEW_HTML = mark_safe(
     """
@@ -66,7 +120,13 @@ class ManuscriptAdmin(admin.ModelAdmin):
     )
     list_filter = ("verified", "metadata_source", "source")
     search_fields = ("reference", "reference_code", "image_no", "title", "source")
-    readonly_fields = ("preview", "image_sha256", "created_at", "updated_at")
+    readonly_fields = (
+        "preview",
+        "image_metadata_display",
+        "image_sha256",
+        "created_at",
+        "updated_at",
+    )
     formfield_overrides = {
         models.URLField: {"widget": forms.URLInput(attrs={"style": "width: 40em;"})},
     }
@@ -107,7 +167,14 @@ class ManuscriptAdmin(admin.ModelAdmin):
             "Imagem e metadados (opcional)",
             {
                 "classes": ("collapse",),
-                "fields": ("image", "image_sha256", "metadata_source", "raw_metadata", "notes"),
+                "fields": (
+                    "image",
+                    "image_metadata_display",
+                    "image_sha256",
+                    "metadata_source",
+                    "raw_metadata",
+                    "notes",
+                ),
             },
         ),
         ("Datas", {"classes": ("collapse",), "fields": ("created_at", "updated_at")}),
@@ -122,6 +189,21 @@ class ManuscriptAdmin(admin.ModelAdmin):
     @admin.display(description="transcrições")
     def transcription_count(self, obj):
         return obj.transcriptions.count()
+
+    @admin.display(description="Metadados da imagem")
+    def image_metadata_display(self, obj):
+        image = (obj.raw_metadata or {}).get("image") if obj and obj.pk else None
+        if not image:
+            return "Sem metadados de imagem ainda — grave com um URL de imagem ou use a ação “Extrair metadados da imagem”."
+        rows = _image_rows(image)
+        if not rows:
+            return "—"
+        body = format_html_join(
+            "",
+            "<tr><th style='text-align:left;padding:2px 14px 2px 0;white-space:nowrap;'>{}</th><td>{}</td></tr>",
+            rows,
+        )
+        return format_html("<table>{}</table>", body)
 
     @admin.action(description="Extrair metadados da imagem (download)")
     def extract_image_metadata(self, request, queryset):
