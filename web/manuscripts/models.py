@@ -3,6 +3,8 @@ import hashlib
 from django.conf import settings
 from django.db import models
 
+from . import parsing
+
 
 class Manuscript(models.Model):
     """A single manuscript image to be transcribed.
@@ -98,10 +100,29 @@ class Manuscript(models.Model):
             self.image.seek(0)
         return h.hexdigest()
 
+    def autofill_metadata(self):
+        """Fill reference/reference_code/image_no/source from the image filename
+        or source URL. Only fills empty fields — never overwrites what was typed
+        or verified. Returns True if anything changed."""
+        source = self.image.name if self.image else self.source_url
+        meta = parsing.extract_metadata(source)
+        if not meta:
+            return False
+        changed = False
+        for field in ("reference", "reference_code", "image_no", "source"):
+            if not getattr(self, field) and meta.get(field):
+                setattr(self, field, meta[field])
+                changed = True
+        if changed and self.metadata_source == self.MetadataSource.MANUAL:
+            self.metadata_source = self.MetadataSource.FILENAME
+        return changed
+
     def save(self, *args, **kwargs):
         # Hash on first save with an image so admin uploads are also anchored.
         if self.image and not self.image_sha256:
             self.image_sha256 = self.compute_sha256()
+        if not self.verified:
+            self.autofill_metadata()
         super().save(*args, **kwargs)
 
 

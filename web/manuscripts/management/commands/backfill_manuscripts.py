@@ -1,40 +1,23 @@
-"""Backfill image hashes and parse references for existing manuscripts.
+"""Backfill image hashes and extracted metadata for existing manuscripts.
 
 For every Manuscript this command:
   * computes ``image_sha256`` (the immutable matching anchor) when missing,
     detecting collisions instead of crashing;
-  * parses ``reference`` / image filename into ``reference_code`` + ``image_no``;
-  * marks ``metadata_source`` as FILENAME for parsed values.
+  * extracts reference/reference_code/image_no/source from the filename or URL
+    via ``Manuscript.autofill_metadata`` (shared with the admin save path).
 
-It is non-destructive: rows flagged ``verified`` are never re-parsed, and hashes
-that would collide with another row are reported, not written. See
-docs/metadata.md.
+It is non-destructive: rows flagged ``verified`` are not re-parsed, only empty
+fields are filled, and hashes that would collide are reported, not written.
+See docs/metadata.md.
 """
-
-import os
-import re
 
 from django.core.management.base import BaseCommand
 
 from manuscripts.models import Manuscript
 
-# "PT-ADVIS-...-01016_m0003" -> code="PT-ADVIS-...-01016", img="m0003"
-REFERENCE_RE = re.compile(r"^(?P<code>.+?)[_-](?P<img>m\d+)$", re.IGNORECASE)
-
-
-def parse_reference(value):
-    """Return (reference_code, image_no) parsed from a reference string."""
-    value = (value or "").strip()
-    if not value:
-        return "", ""
-    match = REFERENCE_RE.match(value)
-    if match:
-        return match.group("code"), match.group("img").lower()
-    return value, ""
-
 
 class Command(BaseCommand):
-    help = "Backfill image_sha256 and parse reference_code/image_no for manuscripts."
+    help = "Backfill image_sha256 and extracted metadata for manuscripts."
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -78,28 +61,20 @@ class Command(BaseCommand):
             elif not ms.image:
                 stats["no_image"] += 1
 
-            # 2) Parse reference parts — never touch expert-verified rows.
+            # 2) Extract metadata — never touch expert-verified rows.
             if ms.verified:
                 stats["skipped_verified"] += 1
-            elif not ms.reference_code:
-                source = ms.reference or os.path.splitext(
-                    os.path.basename(ms.image.name) if ms.image else ""
-                )[0]
-                code, image_no = parse_reference(source)
-                if code:
-                    ms.reference_code = code
-                    if image_no and not ms.image_no:
-                        ms.image_no = image_no
-                    if ms.metadata_source == Manuscript.MetadataSource.MANUAL:
-                        ms.metadata_source = Manuscript.MetadataSource.FILENAME
-                    stats["parsed"] += 1
-                    changed = True
+            elif ms.autofill_metadata():
+                stats["parsed"] += 1
+                changed = True
 
             if changed and not dry_run:
                 ms.save(update_fields=[
                     "image_sha256",
+                    "reference",
                     "reference_code",
                     "image_no",
+                    "source",
                     "metadata_source",
                 ])
 
