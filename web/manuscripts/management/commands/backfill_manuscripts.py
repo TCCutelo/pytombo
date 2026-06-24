@@ -25,14 +25,21 @@ class Command(BaseCommand):
             action="store_true",
             help="Report what would change without writing.",
         )
+        parser.add_argument(
+            "--fetch",
+            action="store_true",
+            help="Also extract image-byte metadata, downloading direct image URLs.",
+        )
 
     def handle(self, *args, **options):
         dry_run = options["dry_run"]
+        fetch = options["fetch"]
         stats = {
             "total": 0,
             "hashed": 0,
             "hash_conflicts": 0,
             "parsed": 0,
+            "image_meta": 0,
             "skipped_verified": 0,
             "no_image": 0,
         }
@@ -64,9 +71,13 @@ class Command(BaseCommand):
             # 2) Extract metadata — never touch expert-verified rows.
             if ms.verified:
                 stats["skipped_verified"] += 1
-            elif ms.autofill_metadata():
-                stats["parsed"] += 1
-                changed = True
+            else:
+                if ms.autofill_metadata():
+                    stats["parsed"] += 1
+                    changed = True
+                if "image" not in (ms.raw_metadata or {}) and ms.pull_image_metadata(fetch=fetch):
+                    stats["image_meta"] += 1
+                    changed = True
 
             if changed and not dry_run:
                 ms.save(update_fields=[
@@ -76,6 +87,7 @@ class Command(BaseCommand):
                     "image_no",
                     "source",
                     "metadata_source",
+                    "raw_metadata",
                 ])
 
         prefix = "[dry-run] " if dry_run else ""
@@ -83,7 +95,7 @@ class Command(BaseCommand):
             self.style.SUCCESS(
                 f"{prefix}{stats['total']} manuscritos | "
                 f"hashed={stats['hashed']} conflicts={stats['hash_conflicts']} "
-                f"parsed={stats['parsed']} verified_skipped={stats['skipped_verified']} "
-                f"no_image={stats['no_image']}"
+                f"parsed={stats['parsed']} image_meta={stats['image_meta']} "
+                f"verified_skipped={stats['skipped_verified']} no_image={stats['no_image']}"
             )
         )

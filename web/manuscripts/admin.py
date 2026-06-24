@@ -117,9 +117,23 @@ class ManuscriptAdmin(admin.ModelAdmin):
     def preview(self, obj):
         return PREVIEW_HTML
 
+    actions = ["extract_image_metadata"]
+
     @admin.display(description="transcrições")
     def transcription_count(self, obj):
         return obj.transcriptions.count()
+
+    @admin.action(description="Extrair metadados da imagem (download)")
+    def extract_image_metadata(self, request, queryset):
+        done = 0
+        for ms in queryset:
+            try:
+                if ms.pull_image_metadata(fetch=True):
+                    ms.save(update_fields=["raw_metadata"])
+                    done += 1
+            except Exception:
+                pass
+        self.message_user(request, f"Metadados de imagem extraídos: {done}/{queryset.count()}.")
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)

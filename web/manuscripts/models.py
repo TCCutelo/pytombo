@@ -1,9 +1,10 @@
 import hashlib
+import io
 
 from django.conf import settings
 from django.db import models
 
-from . import parsing
+from . import imageinfo, parsing
 
 
 class Manuscript(models.Model):
@@ -117,12 +118,50 @@ class Manuscript(models.Model):
             self.metadata_source = self.MetadataSource.FILENAME
         return changed
 
+    def pull_image_metadata(self, fetch=False, timeout=6):
+        """Extract metadata from the image bytes into raw_metadata['image'].
+
+        Uses the uploaded file if present; otherwise, when ``fetch`` is set and
+        the source URL is a direct image, downloads it. Best-effort: any failure
+        leaves the record untouched. Returns True if metadata was stored."""
+        data = None
+        if self.image:
+            self.image.open("rb")
+            try:
+                data = self.image.read()
+            finally:
+                self.image.seek(0)
+        elif fetch and imageinfo.is_image_url(self.source_url):
+            try:
+                data = imageinfo.download_bytes(self.source_url, timeout=timeout)
+            except Exception:
+                data = None
+        if not data:
+            return False
+        try:
+            meta = imageinfo.extract_image_metadata(io.BytesIO(data), size_bytes=len(data))
+        except Exception:
+            return False
+        if not meta:
+            return False
+        raw = dict(self.raw_metadata or {})
+        raw["image"] = meta
+        self.raw_metadata = raw
+        return True
+
     def save(self, *args, **kwargs):
         # Hash on first save with an image so admin uploads are also anchored.
         if self.image and not self.image_sha256:
             self.image_sha256 = self.compute_sha256()
         if not self.verified:
             self.autofill_metadata()
+            # Extract from the bytes too. Uploaded files are free; for a direct
+            # image URL we fetch once (best-effort) if we have nothing yet.
+            if "image" not in (self.raw_metadata or {}):
+                try:
+                    self.pull_image_metadata(fetch=True)
+                except Exception:
+                    pass
         super().save(*args, **kwargs)
 
 
